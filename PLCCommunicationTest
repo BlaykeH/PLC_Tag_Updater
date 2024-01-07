@@ -1,0 +1,68 @@
+import unittest
+from unittest import mock
+from PLCMock import create_plc_mock
+from PLCCommunication import PLCCommunication
+
+class PLCCommunicationTest(unittest.TestCase):
+
+
+
+    @classmethod
+    def setUpClass(cls):
+        cls.plc_ip = "192.168.1.10"
+
+    def setUp(self):
+        # Mock the LogixDriver class
+        self.logix_driver_mock = create_plc_mock(self.plc_ip)
+        # Replace the LogixDriver class in the PLCCommunication class with the mock
+        self.patcher = mock.patch('PLCCommunication.LogixDriver', return_value=self.logix_driver_mock)
+        self.patcher.start()
+    
+
+    def tearDown(self):
+        # Stop patching
+        self.patcher.stop()
+
+    def test_plc_communication(self):
+        plc_comm = PLCCommunication(self.plc_ip)
+        self.assertTrue(plc_comm.connect())
+        self.logix_driver_mock.open.assert_called_once()
+
+
+    def test_plc_does_not_communicate_with_incorrect_IP_address(self):
+        incorrect_ip = "fdf.dfd.s.edf"
+        # Reconfigure the mock for an incorrect IP address
+        self.logix_driver_mock = create_plc_mock(incorrect_ip)
+        self.patcher = mock.patch('PLCCommunication.LogixDriver', return_value=self.logix_driver_mock)
+        self.patcher.start()
+
+        plc_comm = PLCCommunication(incorrect_ip)
+        self.assertFalse(plc_comm.connect())
+        self.logix_driver_mock.open.assert_called_once()
+        self.patcher.stop()
+
+    def test_plc_does_not_communicate_with_incorrect_input_format(self):
+        incorrect_ip = "192.168.1.34.22"
+        # Reconfigure the mock for an incorrect IP format
+        self.logix_driver_mock = create_plc_mock(incorrect_ip)
+        self.patcher = mock.patch('PLCCommunication.LogixDriver', return_value=self.logix_driver_mock)
+        self.patcher.start()
+
+        plc_comm = PLCCommunication(incorrect_ip)
+        self.assertFalse(plc_comm.connect())
+        self.logix_driver_mock.open.assert_called_once()
+        self.patcher.stop()
+
+
+
+    def test_plc_disconnect(self):
+        plc_comm = PLCCommunication(self.plc_ip)
+        self.assertTrue(plc_comm.connect())
+        self.assertFalse(plc_comm.disconnect())
+        
+    
+    
+
+
+if __name__ == '__main__':
+    unittest.main()

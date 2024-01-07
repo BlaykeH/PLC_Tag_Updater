@@ -1,0 +1,1 @@
+plc_comm = PLCCommunication(plc_ip)
